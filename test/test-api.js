@@ -1,4 +1,5 @@
 const http = require("http");
+const https = require("https");
 const fs = require("fs").promises;
 
 const BASE_URL = process.env.TEST_URL || "http://localhost:3000";
@@ -151,7 +152,7 @@ async function testTemplateToPdf() {
   }
 }
 
-// HTTP请求辅助函数
+// HTTP/HTTPS请求辅助函数
 function makeRequest(method, path, data = null) {
   return new Promise((resolve, reject) => {
     const url = new URL(path, BASE_URL);
@@ -162,7 +163,9 @@ function makeRequest(method, path, data = null) {
       },
     };
 
-    const req = http.request(url, options, (res) => {
+    // 根据协议选择http或https模块
+    const client = url.protocol === "https:" ? https : http;
+    const req = client.request(url, options, (res) => {
       let body = [];
 
       res.on("data", (chunk) => {

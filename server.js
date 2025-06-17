@@ -30,8 +30,13 @@ async function getBrowser() {
     // Render.com 免费版特定配置
     const isProduction = process.env.NODE_ENV === "production";
 
-    browserInstance = await puppeteer.launch({
+    const launchOptions = {
       headless: true,
+      // 在生产环境中设置Chrome可执行文件路径
+      ...(isProduction &&
+        process.env.PUPPETEER_EXECUTABLE_PATH && {
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        }),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -63,7 +68,21 @@ async function getBrowser() {
       },
       // 超时控制
       timeout: 30000,
-    });
+    };
+
+    try {
+      browserInstance = await puppeteer.launch(launchOptions);
+    } catch (error) {
+      console.error("Browser launch failed:", error.message);
+      // 如果指定路径失败，尝试使用默认配置
+      if (isProduction && launchOptions.executablePath) {
+        console.log("Retrying without executablePath...");
+        delete launchOptions.executablePath;
+        browserInstance = await puppeteer.launch(launchOptions);
+      } else {
+        throw error;
+      }
+    }
 
     // 监听浏览器断开连接
     browserInstance.on("disconnected", () => {

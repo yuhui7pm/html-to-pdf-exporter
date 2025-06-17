@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "test": "node test/test-api.js",
     "build": "echo 'No build step required'",
-    "install-deps": "yarn install --production"
+    "install-deps": "yarn install --production",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "packageManager": "yarn@1.22.0",
   "keywords": [
