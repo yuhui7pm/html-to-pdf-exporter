@@ -254,15 +254,21 @@ app.post("/api/url-to-pdf", async (req, res) => {
     const browser = await getBrowser();
     page = await browser.newPage();
 
-    // 导航到URL
     await page.goto(url, {
-      waitUntil: "networkidle2",
+      waitUntil: "networkidle0", // 改为networkidle0，等待所有网络请求完成
       timeout: 30000,
     });
 
     // 等待额外的加载时间（处理懒加载内容）
     if (options.waitTime) {
       await page.waitForTimeout(Math.min(options.waitTime, 10000)); // 最大等待10秒
+    }
+
+    // 等待自定义字体加载（如果有的话）
+    try {
+      await page.evaluateHandle("document.fonts.ready");
+    } catch (e) {
+      console.log("Font loading failed, continuing...");
     }
 
     await page.emulateMediaType("screen");
@@ -276,6 +282,8 @@ app.post("/api/url-to-pdf", async (req, res) => {
         bottom: options.margin?.bottom || "20px",
         left: options.margin?.left || "20px",
       },
+      scale: options.scale || 1,
+      preferCSSPageSize: options.preferCSSPageSize !== false,
       timeout: 30000,
     };
 

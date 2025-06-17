@@ -14,7 +14,10 @@ async function testAPI() {
   // 2. HTML转PDF测试
   await testHtmlToPdf();
 
-  // 3. 模板转PDF测试
+  // 3. URL转PDF测试
+  await testUrlToPdf();
+
+  // 4. 模板转PDF测试
   await testTemplateToPdf();
 
   console.log("\n✅ 所有测试完成！");
@@ -93,6 +96,48 @@ async function testHtmlToPdf() {
     }
   } catch (error) {
     console.error("❌ HTML 转 PDF 失败:", error.message);
+  }
+}
+
+// URL转PDF测试
+async function testUrlToPdf() {
+  console.log("\n🌐 测试 URL 转 PDF...");
+
+  const testData = {
+    url: "https://yuhui7pm.github.io/yuhui-resume/",
+    options: {
+      format: "A4",
+      margin: {
+        top: "0",
+        right: "0",
+        bottom: "0",
+        left: "0",
+      },
+      filename: "yuhui-resume.pdf",
+      waitForSelector: null, // 可选：等待特定元素加载
+      delay: 10000, // 可选：加载延迟（毫秒）
+    },
+  };
+
+  try {
+    const response = await makeRequest("POST", "/api/url-to-pdf", testData);
+    if (response.headers["content-type"]?.startsWith("application/pdf")) {
+      // 保存PDF文件
+      const filename = "test-url-to-pdf.pdf";
+      await fs.writeFile(filename, response.body);
+      console.log(
+        "✅ URL 转 PDF 成功！PDF 大小:",
+        response.body.length,
+        "bytes"
+      );
+      console.log("📁 PDF 文件已保存:", filename);
+      console.log("🔗 源URL:", testData.url);
+    } else {
+      console.error("❌ 返回的不是 PDF 文件");
+      console.error("实际的 Content-Type:", response.headers["content-type"]);
+    }
+  } catch (error) {
+    console.error("❌ URL 转 PDF 失败:", error.message);
   }
 }
 
