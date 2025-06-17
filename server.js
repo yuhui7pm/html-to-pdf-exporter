@@ -5,6 +5,7 @@ const fs = require("fs").promises;
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
+const { execSync } = require("child_process");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,12 +28,53 @@ let browserInstance = null;
 
 async function getBrowser() {
   if (!browserInstance) {
-    // Render.com 免费版特定配置
     const isProduction = process.env.NODE_ENV === "production";
+
+    // 动态查找Chrome可执行文件路径
+    let executablePath = null;
+    if (isProduction) {
+      const possiblePaths = [
+        // Puppeteer下载的Chrome路径
+        "/tmp/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome",
+        // 系统Chrome路径
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/google-chrome",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+      ];
+
+      for (const pathPattern of possiblePaths) {
+        try {
+          if (pathPattern.includes("*")) {
+            // 使用glob模式查找
+            const result = execSync(
+              `ls ${pathPattern} 2>/dev/null || echo ""`,
+              {
+                encoding: "utf8",
+              }
+            ).trim();
+            if (result) {
+              executablePath = result.split("\n")[0];
+              console.log(`Found Chrome at: ${executablePath}`);
+              break;
+            }
+          } else {
+            // 直接检查文件是否存在
+            await fs.access(pathPattern, fs.constants.F_OK);
+            executablePath = pathPattern;
+            console.log(`Found Chrome at: ${executablePath}`);
+            break;
+          }
+        } catch (error) {
+          // 继续尝试下一个路径
+          continue;
+        }
+      }
+    }
 
     const launchOptions = {
       headless: true,
-      // 让Puppeteer自动查找Chrome，不指定固定路径
+      ...(executablePath && { executablePath }),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -43,7 +85,7 @@ async function getBrowser() {
         "--disable-gpu",
         "--disable-web-security",
         "--disable-features=VizDisplayCompositor",
-        // 免费版内存优化 - 更严格的限制
+        // 免费版内存优化
         "--memory-pressure-off",
         "--max_old_space_size=300",
         "--disable-background-timer-throttling",
@@ -57,46 +99,61 @@ async function getBrowser() {
           ? ["--single-process", "--disable-features=TranslateUI"]
           : []),
       ],
-      // 免费版性能优化 - 减小视窗大小
       defaultViewport: {
         width: 1024,
         height: 768,
       },
-      // 超时控制
       timeout: 30000,
     };
 
+    console.log("Attempting to launch browser...");
+    console.log(`Production mode: ${isProduction}`);
+    console.log(`Chrome executable: ${executablePath || "default"}`);
+
     try {
-      console.log(
-        "Launching browser with options:",
-        JSON.stringify(launchOptions, null, 2)
-      );
       browserInstance = await puppeteer.launch(launchOptions);
       console.log("Browser launched successfully");
     } catch (error) {
       console.error("Browser launch failed:", error.message);
-      console.error(
-        "Launch options were:",
-        JSON.stringify(launchOptions, null, 2)
-      );
 
-      // 如果失败，尝试使用最基本的配置
+      // 尝试不同的启动策略
+      const fallbackOptions = {
+        ...launchOptions,
+        executablePath: undefined, // 让Puppeteer自动查找
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+        ],
+      };
+
       console.log("Retrying with minimal configuration...");
       try {
-        const minimalOptions = {
-          headless: true,
-          args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu",
-          ],
-        };
-        browserInstance = await puppeteer.launch(minimalOptions);
-        console.log("Browser launched successfully with minimal config");
+        browserInstance = await puppeteer.launch(fallbackOptions);
+        console.log("Browser launched with fallback configuration");
       } catch (retryError) {
-        console.error("Retry also failed:", retryError.message);
-        throw new Error(`Failed to launch browser: ${retryError.message}`);
+        console.error("All launch attempts failed:", retryError.message);
+
+        // 最后的尝试：使用系统Chrome
+        if (isProduction) {
+          const systemChromeOptions = {
+            ...fallbackOptions,
+            executablePath: "/usr/bin/google-chrome-stable",
+          };
+
+          try {
+            browserInstance = await puppeteer.launch(systemChromeOptions);
+            console.log("Browser launched with system Chrome");
+          } catch (systemError) {
+            console.error("System Chrome launch failed:", systemError.message);
+            throw new Error(
+              `Failed to launch browser after all attempts: ${systemError.message}`
+            );
+          }
+        } else {
+          throw retryError;
+        }
       }
     }
 

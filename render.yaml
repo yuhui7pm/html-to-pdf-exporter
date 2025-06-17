@@ -3,7 +3,10 @@ services:
     name: html-to-pdf-exporter
     env: node
     plan: free
-    buildCommand: yarn install --production && npx puppeteer browsers install chrome
+    buildCommand: |
+      yarn install --production
+      npx puppeteer browsers install chrome --path /tmp/.cache/puppeteer
+      yarn check-chrome
     startCommand: yarn start
     healthCheckPath: /health
     envVars:
@@ -13,9 +16,6 @@ services:
         value: false
       - key: PUPPETEER_CACHE_DIR
         value: /tmp/.cache/puppeteer
-      # Puppeteer下载配置
-      - key: PUPPETEER_DOWNLOAD_HOST
-        value: https://storage.googleapis.com
       # 免费版内存优化
       - key: NODE_OPTIONS
         value: --max-old-space-size=400
