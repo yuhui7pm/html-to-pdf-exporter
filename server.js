@@ -32,11 +32,7 @@ async function getBrowser() {
 
     const launchOptions = {
       headless: true,
-      // 在生产环境中设置Chrome可执行文件路径
-      ...(isProduction &&
-        process.env.PUPPETEER_EXECUTABLE_PATH && {
-          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-        }),
+      // 让Puppeteer自动查找Chrome，不指定固定路径
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -84,21 +80,23 @@ async function getBrowser() {
         JSON.stringify(launchOptions, null, 2)
       );
 
-      // 如果指定路径失败，尝试使用默认配置
-      if (isProduction && launchOptions.executablePath) {
-        console.log("Retrying without executablePath...");
-        delete launchOptions.executablePath;
-        try {
-          browserInstance = await puppeteer.launch(launchOptions);
-          console.log(
-            "Browser launched successfully without custom executablePath"
-          );
-        } catch (retryError) {
-          console.error("Retry also failed:", retryError.message);
-          throw retryError;
-        }
-      } else {
-        throw error;
+      // 如果失败，尝试使用最基本的配置
+      console.log("Retrying with minimal configuration...");
+      try {
+        const minimalOptions = {
+          headless: true,
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+          ],
+        };
+        browserInstance = await puppeteer.launch(minimalOptions);
+        console.log("Browser launched successfully with minimal config");
+      } catch (retryError) {
+        console.error("Retry also failed:", retryError.message);
+        throw new Error(`Failed to launch browser: ${retryError.message}`);
       }
     }
 

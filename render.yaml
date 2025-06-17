@@ -12,9 +12,10 @@ services:
       - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
         value: false
       - key: PUPPETEER_CACHE_DIR
-        value: /opt/render/.cache/puppeteer
-      - key: PUPPETEER_EXECUTABLE_PATH
-        value: /opt/render/.cache/puppeteer/chrome/linux-137.0.7151.70/chrome-linux64/chrome
+        value: /tmp/.cache/puppeteer
+      # Puppeteer下载配置
+      - key: PUPPETEER_DOWNLOAD_HOST
+        value: https://storage.googleapis.com
       # 免费版内存优化
       - key: NODE_OPTIONS
         value: --max-old-space-size=400
