@@ -71,14 +71,32 @@ async function getBrowser() {
     };
 
     try {
+      console.log(
+        "Launching browser with options:",
+        JSON.stringify(launchOptions, null, 2)
+      );
       browserInstance = await puppeteer.launch(launchOptions);
+      console.log("Browser launched successfully");
     } catch (error) {
       console.error("Browser launch failed:", error.message);
+      console.error(
+        "Launch options were:",
+        JSON.stringify(launchOptions, null, 2)
+      );
+
       // 如果指定路径失败，尝试使用默认配置
       if (isProduction && launchOptions.executablePath) {
         console.log("Retrying without executablePath...");
         delete launchOptions.executablePath;
-        browserInstance = await puppeteer.launch(launchOptions);
+        try {
+          browserInstance = await puppeteer.launch(launchOptions);
+          console.log(
+            "Browser launched successfully without custom executablePath"
+          );
+        } catch (retryError) {
+          console.error("Retry also failed:", retryError.message);
+          throw retryError;
+        }
       } else {
         throw error;
       }
