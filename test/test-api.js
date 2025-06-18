@@ -112,6 +112,17 @@ async function testUrlToPdf() {
         right: "0",
         bottom: "0",
         left: "0",
+      }
+    },
+  } || {
+    url: "https://yuhui7pm.github.io/yuhui-resume/",
+    options: {
+      format: "A4",
+      margin: {
+        top: "0",
+        right: "0",
+        bottom: "0",
+        left: "0",
       },
       filename: "yuhui-resume.pdf",
       waitForSelector: null, // 可选：等待特定元素加载
