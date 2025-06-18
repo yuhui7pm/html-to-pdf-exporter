@@ -9,7 +9,7 @@
     "test": "node test/test-api.js",
     "build": "echo 'No build step required'",
     "install-deps": "yarn install --production",
-    "postinstall": "npx puppeteer browsers install chrome --path /tmp/.cache/puppeteer",
+    "postinstall": "npx puppeteer browsers install chrome --path ./.cache/puppeteer",
     "check-chrome": "node scripts/check-chrome.js",
     "prestart": "yarn check-chrome"
   },

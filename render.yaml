@@ -5,7 +5,7 @@ services:
     plan: free
     buildCommand: |
       yarn install --production
-      npx puppeteer browsers install chrome --path /tmp/.cache/puppeteer
+      npx puppeteer browsers install chrome --path ./.cache/puppeteer
       yarn check-chrome
     startCommand: yarn start
     healthCheckPath: /health
@@ -15,7 +15,7 @@ services:
       - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
         value: false
       - key: PUPPETEER_CACHE_DIR
-        value: /tmp/.cache/puppeteer
+        value: ./.cache/puppeteer
       # 免费版内存优化
       - key: NODE_OPTIONS
         value: --max-old-space-size=400

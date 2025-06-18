@@ -35,7 +35,7 @@ async function getBrowser() {
     if (isProduction) {
       const possiblePaths = [
         // Puppeteer下载的Chrome路径
-        "/tmp/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome",
+        "./.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome",
         // 系统Chrome路径
         "/usr/bin/google-chrome-stable",
         "/usr/bin/google-chrome",

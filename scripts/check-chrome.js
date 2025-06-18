@@ -8,7 +8,7 @@ async function checkChrome() {
 
   const possiblePaths = [
     // Puppeteer下载的Chrome路径
-    "/tmp/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome",
+    "./.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome",
     // 系统Chrome路径
     "/usr/bin/google-chrome-stable",
     "/usr/bin/google-chrome",
@@ -44,7 +44,7 @@ async function checkChrome() {
   if (foundPaths.length === 0) {
     console.log("❌ No Chrome executable found!");
     console.log(
-      "🔧 Try running: npx puppeteer browsers install chrome --path /tmp/.cache/puppeteer"
+      "🔧 Try running: npx puppeteer browsers install chrome --path ./.cache/puppeteer"
     );
     process.exit(1);
   } else {
@@ -54,13 +54,13 @@ async function checkChrome() {
 
   // 检查缓存目录
   try {
-    const cacheDir = process.env.PUPPETEER_CACHE_DIR || "/tmp/.cache/puppeteer";
+    const cacheDir = process.env.PUPPETEER_CACHE_DIR || "./.cache/puppeteer";
     await fs.access(cacheDir, fs.constants.F_OK);
     console.log(`✅ Cache directory exists: ${cacheDir}`);
   } catch (error) {
     console.log(
       `❌ Cache directory not found: ${
-        process.env.PUPPETEER_CACHE_DIR || "/tmp/.cache/puppeteer"
+        process.env.PUPPETEER_CACHE_DIR || "./.cache/puppeteer"
       }`
     );
   }
