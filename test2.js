@@ -9,9 +9,8 @@ const puppeteer = require("puppeteer");
   });
 
   await page.pdf({
-    path: "example1.pdf",
+    path: "example3.pdf",
     format: "A4",
-    printBackground: true,
     margin: {
       top: "0",
       bottom: "0",
